@@ -33,7 +33,7 @@ theme_set(theme_minimal())
 
 ```{r data}
 # Starbucks locations
-Starbucks <- read_csv("Starbucks.csv")
+Starbucks <- read_csv("Starbucks.csv") #Couldn't read from website so I dowbloaded it
 
 starbucks_us_by_state <- Starbucks %>% 
   filter(Country == "US") %>% 
@@ -167,21 +167,52 @@ ggmap(twin_cities) +
 The example I showed in the tutorial did not account for population of each state in the map. In the code below, a new variable is created, `starbucks_per_10000`, that gives the number of Starbucks per 10,000 people. It is in the `starbucks_with_2018_pop_est` dataset.
 
 ```{r}
+#Read data from CSV file
 census_pop_est_2018 <- read_csv("https://www.dropbox.com/s/6txwv3b4ng7pepe/us_census_2018_state_pop_est.csv?dl=1") %>% 
+  #Seperate one column into multiple ones based on our criteria
   separate(state, into = c("dot","state"), extra = "merge") %>% 
+  #Selects desired columns (everything but one here)
   select(-dot) %>% 
+  #ads new column 
   mutate(state = str_to_lower(state))
 
-starbucks_with_2018_pop_est <-
+starbucks_with_2018_pop_est <- #assign to a new data frame
   starbucks_us_by_state %>% 
+  #Join the previous data frame to the one on the right using vales in the left one
   left_join(census_pop_est_2018,
             by = c("state_name" = "state")) %>% 
+  #Ads column
   mutate(starbucks_per_10000 = (n/est_pop_2018)*10000)
 ```
 
   6. **`dplyr` review**: Look through the code above and describe what each line of code does.
 
   7. Create a choropleth map that shows the number of Starbucks per 10,000 people on a map of the US. Use a new fill color, add points for all Starbucks in the US (except Hawaii and Alaska), add an informative title for the plot, and include a caption that says who created the plot (you!). Make a conclusion about what you observe.
+  
+```{r}
+states_map <- map_data("state")
+```
+
+```{r}
+starbucks_with_2018_pop_est %>% 
+  ggplot() +
+  geom_map(map = states_map,
+           aes(map_id = state_name,
+               fill = starbucks_per_10000)) +
+  expand_limits(x = states_map$long, y = states_map$lat) + 
+  theme_map() +
+  labs(title = "Starbucks distribution per 10,000 citizens by state",
+       caption = "Created By: Laith Alayassa") +
+  theme(legend.background = element_blank()) +
+  guides(fill=guide_legend(title="# per 10,000")) +
+  geom_point(data = Starbucks %>% filter( Country == "US") %>%  filter (`State/Province` != "AK") %>% filter(`State/Province` != "HI"),
+             aes(x = Longitude, y = Latitude),
+             size = .05,
+             alpha = .2, 
+             color = "orange") +
+  scale_color_gradient(low = "blue", high = "red") #not working ;(
+```
+We can see that the west coast has a higher number of Starbucks shops per 10000 compared with the Eastern parts of the country
 
 ### A few of your favorite things (`leaflet`)
 
