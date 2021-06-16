@@ -33,7 +33,7 @@ theme_set(theme_minimal())
 
 ```{r data}
 # Starbucks locations
-Starbucks <- read_csv("https://www.macalester.edu/~ajohns24/Data/Starbucks.csv")
+Starbucks <- read_csv("Starbucks.csv")
 
 starbucks_us_by_state <- Starbucks %>% 
   filter(Country == "US") %>% 
@@ -96,13 +96,71 @@ These exercises will reiterate what you learned in the "Mapping data with R" tut
 
   1. Add the `Starbucks` locations to a world map. Add an aesthetic to the world map that sets the color of the points according to the ownership type. What, if anything, can you deduce from this visualization?  
 
+```{r}
+world <- get_stamenmap(
+    bbox = c(left = -180, bottom = -57, right = 179, top = 82.1), 
+    maptype = "terrain",
+    zoom = 2)
+```
+```{r}
+ggmap(world) +
+  geom_point(data = Starbucks, 
+             aes(x = Longitude,
+                 y = Latitude,
+                 shape = `Ownership Type`,
+                 color = `Ownership Type`)) +
+  theme_map()
+```
+I see that in north America most shops are either company owned or Licesnsed, but no joint Ventures, unlike East Asia and places in europe where there is a lot morer joint ventures, also, the middle east is nearly exclusively  licensed shops. 
+
   2. Construct a new map of Starbucks locations in the Twin Cities metro area (approximately the 5 county metro area).  
 
-  3. In the Twin Cities plot, play with the zoom number. What does it do?  (just describe what it does - don't actually include more than one map).  
+```{r}
+twin_cities <- get_stamenmap(
+    bbox = c(left = -93.2950, bottom = 44.8938, right = -92.9757, top = 45.0379), 
+    maptype = "terrain",
+    zoom = 12)
+```
+```{r}
+ggmap(twin_cities) +
+  geom_point(data = Starbucks, 
+             aes(x = Longitude, y = Latitude)) +
+  theme_map()
+```
 
+
+  3. In the Twin Cities plot, play with the zoom number. What does it do?  (just describe what it does - don't actually include more than one map).  
+  It defines the level of detail in the map, a greater number means bigger detail and information, a smaller means less detail.
+  
   4. Try a couple different map types (see `get_stamenmap()` in help and look at `maptype`). Include a map with one of the other map types.  
 
+
+```{r}
+twin_cities_watercolor <- get_stamenmap(
+    bbox = c(left = -93.2950, bottom = 44.8938, right = -92.9757, top = 45.0379), 
+    maptype = "watercolor",
+    zoom = 12)
+```
+
+
+```{r}
+ggmap(twin_cities_watercolor) +
+  geom_point(data = Starbucks, 
+             aes(x = Longitude,
+                 y = Latitude,
+                 color = `Ownership Type`)) +
+  theme_map()
+```
   5. Add a point to the map that indicates Macalester College and label it appropriately. There are many ways you can do think, but I think it's easiest with the `annotate()` function (see `ggplot2` cheatsheet).
+
+```{r}
+ggmap(twin_cities) +
+  theme_map() +
+  annotate(geom = 'text',
+           x = 44.93765,
+           y = -93.16931,
+           label = "Macalester College")
+```
 
 ### Choropleth maps with Starbucks data (`geom_map()`)
 
