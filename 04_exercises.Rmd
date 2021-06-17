@@ -262,6 +262,10 @@ data_site <-
 Trips <- readRDS(gzcon(url(data_site)))
 Stations<-read_csv("http://www.macalester.edu/~dshuman1/data/112/DC-Stations.csv")
 ```
+I constantly get the error:
+Error in readRDS(gzcon(url(data_site))) : error reading from connection
+
+
 
   9. Use the latitude and longitude variables in `Stations` to make a visualization of the total number of departures from each station in the `Trips` data. Use either color or size to show the variation in number of departures. This time, plot the points on top of a map. Use any of the mapping tools you'd like.
   
@@ -281,7 +285,55 @@ The following exercises will use the COVID-19 data from the NYT.
 
   11. Create a map that colors the states by the most recent cumulative number of COVID-19 cases (remember, these data report cumulative numbers so you don't need to compute that). Describe what you see. What is the problem with this map?
   
+```{r}
+states_map <- map_data("state")
+
+latest_cases <- covid19 %>% 
+  group_by(state) %>% 
+  summarise(final_cases = max(cases)) %>%
+  mutate(state = str_to_lower(state))
+  # filter ( state != "Alaska") %>% filter(state != "Hawaii")
+
+
+```
+
+
+```{r}
+latest_cases %>% 
+  ggplot() +
+  geom_map(map = states_map,
+           aes(map_id = state,
+               fill = final_cases)) +
+  expand_limits(x = states_map$long, y = states_map$lat) + 
+  theme_map() +
+  labs(title = "Covid cases by state in the US",
+       caption = "Made by Laith Alayassa")
+```
+  
+  
+  The map doesn't take into account the populations of the states, therefore the numbers reflect the number of citizens in the states
+  
   12. Now add the population of each state to the dataset and color the states by most recent cumulative cases/10,000 people. See the code for doing this with the Starbucks data. You will need to make some modifications. 
+```{r}
+latest_cases_per_10000 <-
+  latest_cases %>% 
+  left_join(census_pop_est_2018,
+            by = "state") %>% 
+  mutate(cases_per_10000 = (final_cases/est_pop_2018)*10000)
+```
+  
+```{r}
+latest_cases_per_10000 %>% 
+  ggplot() +
+  geom_map(map = states_map,
+           aes(map_id = state,
+               fill = cases_per_10000)) +
+  expand_limits(x = states_map$long, y = states_map$lat) + 
+  theme_map() +
+  labs(title = "Covid cases by state in the US",
+       caption = "Made by Laith Alayassa")
+```
+  
   
   13. **CHALLENGE** Choose 4 dates spread over the time period of the data and create the same map as in exercise 12 for each of the dates. Display the four graphs together using faceting. What do you notice?
   
@@ -308,5 +360,6 @@ mpls_nbhd <- st_read("Minneapolis_Neighborhoods/Minneapolis_Neighborhoods.shp", 
 
   19. Below, provide a link to your GitHub page with this set of Weekly Exercises. Specifically, if the name of the file is 04_exercises.Rmd, provide a link to the 04_exercises.md file, which is the one that will be most readable on GitHub.
 
+[GitHub link](https://github.com/ShawermaLVR/Weeky_Exercises_4/blob/master/04_exercises.md)
 
 **DID YOU REMEMBER TO UNCOMMENT THE OPTIONS AT THE TOP?**
